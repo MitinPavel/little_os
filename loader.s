@@ -1,4 +1,5 @@
 extern sum_of_three
+extern fb_write_simple
 
 global loader                   ; the entry symbol for ELF
 
@@ -29,7 +30,8 @@ loader:                         ; the loader label (defined as entry point in li
     push dword 3
     call sum_of_three
     add  esp, 12		; pop stack 3 push times 4 bytes
-
+    call fb_write_simple
+   
 .loop:
     jmp .loop                   ; loop forever
 
