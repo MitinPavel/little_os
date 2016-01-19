@@ -1,4 +1,4 @@
-extern cafebabe 
+extern sum_of_three
 
 global loader                   ; the entry symbol for ELF
 
@@ -24,7 +24,11 @@ align 4                         ; the code must be 4 byte aligned
 mov esp, kernel_stack + KERNEL_STACK_SIZE       ; point esp to the start of the
                                                 ; stack (end of memory area)
 loader:                         ; the loader label (defined as entry point in linker script)
-    call cafebabe 
+    push dword 3
+    push dword 3
+    push dword 3
+    call sum_of_three
+    add  esp, 12		; pop stack 3 push times 4 bytes
 
 .loop:
     jmp .loop                   ; loop forever

@@ -1,6 +1,5 @@
-/* The C function */
-int cafebabe()
+int sum_of_three(int arg1, int arg2, int arg3)
 {
-	return 0xCAFEBABE;
+	return arg1 + arg2 + arg3;
 }
 
