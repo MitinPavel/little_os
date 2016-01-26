@@ -1,6 +1,6 @@
 extern sum_of_three
 extern fb_move_cursor
-extern fb_write_simple
+extern os_main 
 
 global loader                   ; the entry symbol for ELF
 
@@ -34,7 +34,7 @@ loader:                         ; the loader label (defined as entry point in li
     push dword 50
     call fb_move_cursor
     add  esp, 4
-    call fb_write_simple
+    call os_main
    
 .loop:
     jmp .loop                   ; loop forever

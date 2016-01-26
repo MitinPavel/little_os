@@ -57,11 +57,11 @@ void serial_configure_baud_rate(unsigned short com, unsigned short divisor)
  */
 void serial_configure_line(unsigned short com)
 {
-    /* Bit:     | 7 | 6 | 5 4 3 | 2 | 1 0 |
-     * Content: | d | b | prty  | s | dl  |
-     * Value:   | 0 | 0 | 0 0 0 | 0 | 1 1 | = 0x03
-     */
-    outb(SERIAL_LINE_COMMAND_PORT(com), 0x03);
+	/* Bit:     | 7 | 6 | 5 4 3 | 2 | 1 0 |
+	 * Content: | d | b | prty  | s | dl  |
+	 * Value:   | 0 | 0 | 0 0 0 | 0 | 1 1 | = 0x03
+ 	*/
+	outb(SERIAL_LINE_COMMAND_PORT(com), 0x03);
 }
 
 /** serial_is_transmit_fifo_empty:
@@ -74,15 +74,29 @@ void serial_configure_line(unsigned short com)
  */
 int serial_is_transmit_fifo_empty(unsigned int com)
 {
-    /* 0x20 = 0010 0000 */
-    return inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20;
+	/* 0x20 = 0010 0000 */
+	return inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20;
 }
 
-//void write_serial(char a) {
-//   while (is_transmit_empty() == 0);
-// 
-//   outb(PORT,a);
-//}
+void serial_write_char(unsigned int com, char a) 
+{
+	while (serial_is_transmit_fifo_empty(com) == 0);
+
+
+	outb(SERIAL_DATA_PORT(com), a);
+} 
+
+void test_serial_port()
+{
+	serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
+        serial_configure_line(SERIAL_COM1_BASE);
+	serial_write_char(SERIAL_COM1_BASE, 'h');
+	serial_write_char(SERIAL_COM1_BASE, 'e');
+	serial_write_char(SERIAL_COM1_BASE, 'l');
+	serial_write_char(SERIAL_COM1_BASE, 'l');
+	serial_write_char(SERIAL_COM1_BASE, 'o');
+	serial_write_char(SERIAL_COM1_BASE, '\n');
+}
 
 /* ------------------------------------------------------------------------- */
 /* ----------------------  Framebuffer --------------------------------------*/
@@ -142,4 +156,11 @@ void fb_write_simple()
 }
 
 /***************************************************************************/
+
+void os_main()
+{
+	fb_write_simple();
+	test_serial_port();
+}
+
 
