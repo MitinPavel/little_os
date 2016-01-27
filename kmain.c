@@ -86,16 +86,25 @@ void serial_write_char(unsigned int com, char a)
 	outb(SERIAL_DATA_PORT(com), a);
 } 
 
+void serial_write(const char* data, int len)
+{
+	int i = 0;
+	for (i = 0; i < len; i++) {
+		serial_write_char(SERIAL_COM1_BASE, data[i]);
+	}
+}
+ 
+
 void test_serial_port()
 {
 	serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
         serial_configure_line(SERIAL_COM1_BASE);
-	serial_write_char(SERIAL_COM1_BASE, 'h');
-	serial_write_char(SERIAL_COM1_BASE, 'e');
-	serial_write_char(SERIAL_COM1_BASE, 'l');
-	serial_write_char(SERIAL_COM1_BASE, 'l');
-	serial_write_char(SERIAL_COM1_BASE, 'o');
-	serial_write_char(SERIAL_COM1_BASE, '\n');
+//	serial_write_char(SERIAL_COM1_BASE, 'h');
+
+        char str[] = "hello all :)\n";
+
+	serial_write(str, 13);
+
 }
 
 /* ------------------------------------------------------------------------- */
