@@ -2,6 +2,7 @@
 #include "serial.h"
 #include "fb.h"
 #include "memory_segments.h"
+#include "interrupts.h"
 
 /**************************************************************************/
 
@@ -17,6 +18,7 @@ void os_main()
 	fb_write_simple();
 	test_serial_port();
         segments_install_gdt();
+        interrupts_install_idt();
 }
 
 
