@@ -27,7 +27,7 @@ struct IDTDescriptor {
 
 void interrupts_install_idt();
 
-void interrupts_load_idt(struct IDT idt); // Wrapper around ASM.
+void interrupts_load_idt(unsigned int idt_address); // Wrapper around ASM.
 
 #endif /* INCLUDE_INTERRUPTS */
 

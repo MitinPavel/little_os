@@ -3,20 +3,12 @@
 #define INTERRUPTS_DESCRIPTOR_COUNT 256 
 
 static struct IDTDescriptor idt_descriptors[INTERRUPTS_DESCRIPTOR_COUNT];
+static struct IDT idt;
 
 void interrupts_init_descriptor(int index, unsigned int address)
 {
-
-	/*
-        unsigned short offset_low; // offset bits 0..15
-        unsigned short segment_selector; // a code segment selector in GDT or LDT
-
-        unsigned char reserved; // Just 0.
-        unsigned char type_and_attr; // type and attributes
-        unsigned short offset_high; // offset bits 16..31
-	*/
-	idt_descriptors[index].offset_high = (address >> 16) & 0xFFFF;
-	idt_descriptors[index].offset_low = (address & 0xFFFF);
+	idt_descriptors[index].offset_high = (address >> 16) & 0xFFFF; // offset bits 0..15
+	idt_descriptors[index].offset_low = (address & 0xFFFF); // offset bits 16..31
 
 	idt_descriptors[index].segment_selector = 0x08; // The second (code) segment selector in GDT: one segment is 64b.
 	idt_descriptors[index].reserved = 0x00; // Reserved.
@@ -39,5 +31,9 @@ void interrupts_init_descriptor(int index, unsigned int address)
 void interrupts_install_idt()
 {
 	interrupts_init_descriptor(1, 1);
+
+	idt.address = (int) &idt_descriptors;
+	idt.size = sizeof(struct IDTDescriptor) * 256;
+	interrupts_load_idt((int) &idt);
 }
 
