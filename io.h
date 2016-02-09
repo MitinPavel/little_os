@@ -18,5 +18,11 @@ void outb(unsigned short port, unsigned char data);
  */
 unsigned char inb(unsigned short port);
 
+/*
+ * Forces the CPU to wait for an I/O operation to complete.
+   Only use this when there's nothing like a status register or an IRQ to tell you the info has been received.
+ */
+void io_wait();
+
 #endif /* INCLUDE_IO_H */
 
