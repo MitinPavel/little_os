@@ -1,6 +1,8 @@
 #include "interrupts.h"
 #include "io.h"
 
+#include "serial.h"
+
 #define INTERRUPTS_DESCRIPTOR_COUNT 256 
 
 static struct IDTDescriptor idt_descriptors[INTERRUPTS_DESCRIPTOR_COUNT];
@@ -31,11 +33,28 @@ void interrupts_init_descriptor(int index, unsigned int address)
 
 void interrupts_install_idt()
 {
-	interrupts_init_descriptor(1, 1);
+	interrupts_init_descriptor(1, (unsigned int) interrupt_handler_1);
 
 	idt.address = (int) &idt_descriptors;
 	idt.size = sizeof(struct IDTDescriptor) * 256;
 	interrupts_load_idt((int) &idt);
+
+	interrupts_clear_imr_mask(0);
+	interrupts_set_imr_mask(1);
+	interrupts_clear_imr_mask(2);
+	interrupts_clear_imr_mask(3);
+	interrupts_clear_imr_mask(4);
+	interrupts_clear_imr_mask(5);
+	interrupts_clear_imr_mask(6);
+	interrupts_clear_imr_mask(7);
+	interrupts_clear_imr_mask(8);
+	interrupts_clear_imr_mask(9);
+	interrupts_clear_imr_mask(10);
+	interrupts_clear_imr_mask(11);
+	interrupts_clear_imr_mask(12);
+	interrupts_clear_imr_mask(13);
+	interrupts_clear_imr_mask(14);
+	interrupts_clear_imr_mask(15);
 }
 
 /* PIC ***********************************************************************/
@@ -93,5 +112,55 @@ void interrupts_remap_pic(int offset1, int offset2)
 
 	outb(PIC1_DATA, a1);   // restore saved masks.
 	outb(PIC2_DATA, a2);
+}
+
+// Interrupt Mask Register (IMR)
+void interrupts_set_imr_mask(unsigned char irq_line)
+{
+	unsigned short port;
+	unsigned char value;
+
+	if (irq_line < 8) {
+		port = PIC1_DATA;
+	} else {
+		port = PIC2_DATA;
+		irq_line -= 8;
+	}
+
+	value = inb(port) | (1 << irq_line);
+	outb(port, value);        
+}
+
+void interrupts_clear_imr_mask(unsigned char irq_line)
+{
+	unsigned short port;
+	unsigned char value;
+ 
+
+	if (irq_line < 8) {
+		port = PIC1_DATA;
+	} else {
+		port = PIC2_DATA;
+		irq_line -= 8;
+	}
+
+	value = inb(port) & ~(1 << irq_line);
+	outb(port, value);        
+}
+
+
+/* Interrupt handlers ********************************************************/
+
+void interrupt_handler(struct cpu_state cpu, struct stack_state stack, unsigned int interrupt)
+{
+	unsigned int i = cpu.eax + stack.cs + interrupt;
+        
+
+        serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
+        serial_configure_line(SERIAL_COM1_BASE);
+        char str[] = "hello :)\n";
+        str[i] = 'a';
+        serial_write(str, 9);
+
 }
 

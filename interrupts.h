@@ -28,8 +28,31 @@ struct IDTDescriptor {
 void interrupts_install_idt();
 
 void interrupts_remap_pic(int offset1, int offset2);
+void interrupts_clear_imr_mask(unsigned char irq_line);
+void interrupts_set_imr_mask(unsigned char irq_line);
 
-void interrupts_load_idt(unsigned int idt_address); // Wrapper around ASM.
+// Wrappers around ASM.
+void interrupts_load_idt(unsigned int idt_address);
+void interrupt_handler_1();
+
+struct cpu_state {
+	unsigned int eax;
+	unsigned int ebx;
+	unsigned int ecx;
+	unsigned int edx;
+	unsigned int ebp; 
+	unsigned int esi; 
+	unsigned int edi; 
+} __attribute__((packed));
+
+struct stack_state {
+	unsigned int error_code;
+	unsigned int eip;
+	unsigned int cs;
+	unsigned int eflags;
+} __attribute__((packed));
+
+void interrupt_handler(struct cpu_state cpu, struct stack_state stack, unsigned int interrupt);
 
 #endif /* INCLUDE_INTERRUPTS */
 
