@@ -1,6 +1,5 @@
 global outb             ; make the label outb visible outside this file
 global inb
-global io_wait
 
 ; outb - send a byte to an I/O port
 ; stack: [esp + 8] the data byte
@@ -20,11 +19,4 @@ inb:
     mov dx, [esp + 4]       ; move the address of the I/O port to the dx register
     in  al, dx              ; read a byte from the I/O port and store it in the al register
     ret                     ; return the read byte
-
-
-io_wait:
-	jmp .io_wait_label_1
-.io_wait_label_1
-	jmp .io_wait_label_2
-.io_wait_label_2
 

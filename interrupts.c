@@ -33,28 +33,13 @@ void interrupts_init_descriptor(int index, unsigned int address)
 
 void interrupts_install_idt()
 {
-	interrupts_init_descriptor(1, (unsigned int) interrupt_handler_1);
+	interrupts_init_descriptor(21, (unsigned int) interrupt_handler_1);
 
 	idt.address = (int) &idt_descriptors;
 	idt.size = sizeof(struct IDTDescriptor) * 256;
 	interrupts_load_idt((int) &idt);
 
-	interrupts_clear_imr_mask(0);
-	interrupts_set_imr_mask(1);
-	interrupts_clear_imr_mask(2);
-	interrupts_clear_imr_mask(3);
-	interrupts_clear_imr_mask(4);
-	interrupts_clear_imr_mask(5);
-	interrupts_clear_imr_mask(6);
-	interrupts_clear_imr_mask(7);
-	interrupts_clear_imr_mask(8);
-	interrupts_clear_imr_mask(9);
-	interrupts_clear_imr_mask(10);
-	interrupts_clear_imr_mask(11);
-	interrupts_clear_imr_mask(12);
-	interrupts_clear_imr_mask(13);
-	interrupts_clear_imr_mask(14);
-	interrupts_clear_imr_mask(15);
+	interrupts_remap_pic(0x20, 0x28);
 }
 
 /* PIC ***********************************************************************/
@@ -87,67 +72,22 @@ arguments:
 
 void interrupts_remap_pic(int offset1, int offset2)
 {
-	unsigned char a1, a2;
-
-	a1 = inb(PIC1_DATA);                        // save masks
-	a2 = inb(PIC2_DATA);
-
 	outb(PIC1_COMMAND, ICW1_INIT+ICW1_ICW4);  // starts the initialization sequence (in cascade mode)
-	io_wait();
 	outb(PIC2_COMMAND, ICW1_INIT+ICW1_ICW4);
-	io_wait();
 	outb(PIC1_DATA, offset1);                 // ICW2: Master PIC vector offset
-	io_wait();
 	outb(PIC2_DATA, offset2);                 // ICW2: Slave PIC vector offset
-	io_wait();
 	outb(PIC1_DATA, 4);                       // ICW3: tell Master PIC that there is a slave PIC at IRQ2 (0000 0100)
-	io_wait();
 	outb(PIC2_DATA, 2);                       // ICW3: tell Slave PIC its cascade identity (0000 0010)
-	io_wait();
 
 	outb(PIC1_DATA, ICW4_8086);
-	io_wait();
 	outb(PIC2_DATA, ICW4_8086);
-	io_wait();
 
-	outb(PIC1_DATA, a1);   // restore saved masks.
-	outb(PIC2_DATA, a2);
+        // Setup Interrupt Mask Register (IMR)
+	outb(PIC1_DATA, 0xFD); // 1111 1101 - Enable IRQ 1 only (keyboard).
+	outb(PIC2_DATA, 0xFF);
+
+	asm("sti"); //enable interrupts
 }
-
-// Interrupt Mask Register (IMR)
-void interrupts_set_imr_mask(unsigned char irq_line)
-{
-	unsigned short port;
-	unsigned char value;
-
-	if (irq_line < 8) {
-		port = PIC1_DATA;
-	} else {
-		port = PIC2_DATA;
-		irq_line -= 8;
-	}
-
-	value = inb(port) | (1 << irq_line);
-	outb(port, value);        
-}
-
-void interrupts_clear_imr_mask(unsigned char irq_line)
-{
-	unsigned short port;
-	unsigned char value;
- 
-
-	if (irq_line < 8) {
-		port = PIC1_DATA;
-	} else {
-		port = PIC2_DATA;
-		irq_line -= 8;
-	}
-
-	value = inb(port) & ~(1 << irq_line);
-	outb(port, value);        
-}
-
 
 /* Interrupt handlers ********************************************************/
 
