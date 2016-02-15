@@ -32,7 +32,7 @@ void interrupts_remap_pic(int offset1, int offset2);
 
 // Wrappers around ASM.
 void interrupts_load_idt(unsigned int idt_address);
-void interrupt_handler_1();
+void interrupt_handler_33();
 
 struct cpu_state {
 	unsigned int eax;
@@ -51,7 +51,8 @@ struct stack_state {
 	unsigned int eflags;
 } __attribute__((packed));
 
-void interrupt_handler(struct cpu_state cpu, struct stack_state stack, unsigned int interrupt);
+void interrupt_handler(struct cpu_state cpu, unsigned int interrupt, struct stack_state stack);
+
 
 #endif /* INCLUDE_INTERRUPTS */
 

@@ -5,8 +5,10 @@
 
 #define INTERRUPTS_DESCRIPTOR_COUNT 256 
 
-static struct IDTDescriptor idt_descriptors[INTERRUPTS_DESCRIPTOR_COUNT];
-static struct IDT idt;
+#define INTERRUPTS_KEYBOARD 33 
+
+struct IDTDescriptor idt_descriptors[INTERRUPTS_DESCRIPTOR_COUNT];
+struct IDT idt;
 
 void interrupts_init_descriptor(int index, unsigned int address)
 {
@@ -25,18 +27,18 @@ void interrupts_init_descriptor(int index, unsigned int address)
 		S	Storage Segment. Set to 0 for interrupt gates.
 		D	Size of gate, (1 = 32 bits, 0 = 16 bits).
 	*/
-	idt_descriptors[index].type_and_attr = (0x01 << 7) |			// P
-                                               (0x00 << 6) | (0x00 << 5) |	// DPL
-                                               (0x00 << 4) |			// S
-                                               0x0f;				// D + GateType 1111 (0b1111=0xf 32-bit trap gate) TODO 110?
+	idt_descriptors[index].type_and_attr =	(0x01 << 7) |			// P
+						(0x00 << 6) | (0x00 << 5) |	// DPL
+						0xe;				// 0b1110=0xE 32-bit interrupt gate
 }
 
 void interrupts_install_idt()
 {
-	interrupts_init_descriptor(21, (unsigned int) interrupt_handler_1);
+	interrupts_init_descriptor(INTERRUPTS_KEYBOARD, (unsigned int) interrupt_handler_33);
+
 
 	idt.address = (int) &idt_descriptors;
-	idt.size = sizeof(struct IDTDescriptor) * 256;
+	idt.size = sizeof(struct IDTDescriptor) * INTERRUPTS_DESCRIPTOR_COUNT;
 	interrupts_load_idt((int) &idt);
 
 	interrupts_remap_pic(0x20, 0x28);
@@ -86,21 +88,24 @@ void interrupts_remap_pic(int offset1, int offset2)
 	outb(PIC1_DATA, 0xFD); // 1111 1101 - Enable IRQ 1 only (keyboard).
 	outb(PIC2_DATA, 0xFF);
 
-	asm("sti"); //enable interrupts
+	asm("sti"); // Enable interrupts.
 }
 
 /* Interrupt handlers ********************************************************/
 
-void interrupt_handler(struct cpu_state cpu, struct stack_state stack, unsigned int interrupt)
+void interrupt_handler(__attribute__((unused)) struct cpu_state cpu, unsigned int interrupt, __attribute__((unused)) struct stack_state stack)
 {
-	unsigned int i = cpu.eax + stack.cs + interrupt;
-        
 
-        serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
-        serial_configure_line(SERIAL_COM1_BASE);
-        char str[] = "hello :)\n";
-        str[i] = 'a';
-        serial_write(str, 9);
+	switch (interrupt){
+		case INTERRUPTS_KEYBOARD:
+			serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
+			serial_configure_line(SERIAL_COM1_BASE);
+			char str[] = "hello :D\n";
+			serial_write(str, 9);
 
+			break;
+		default:
+			break;
+    }
 }
 
