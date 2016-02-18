@@ -78,8 +78,8 @@ void test_serial_port()
 	serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
         serial_configure_line(SERIAL_COM1_BASE);
 
-        char str[] = "hello :)\n";
-	serial_write(str, 9);
+	char str[] = "test serial port\n";
+	serial_write(str, 17);
 }
 
 

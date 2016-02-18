@@ -8,6 +8,11 @@
 
 #define INTERRUPTS_PIC1_OFFSET 0x20
 #define INTERRUPTS_PIC2_OFFSET 0x28
+#define INTERRUPTS_PIC2_END INTERRUPTS_PIC2_OFFSET + 7
+
+#define INTERRUPTS_PIC1_COMMAND_PORT 0x20
+#define INTERRUPTS_PIC2_COMMAND_PORT 0xA0
+#define INTERRUPTS_PIC_ACKNOWLEDGE 0x20
 
 #define INTERRUPTS_KEYBOARD 33 
 
@@ -69,6 +74,24 @@ void interrupts_install_idt()
 #define ICW4_BUF_MASTER	0x0C		/* Buffered mode/master */
 #define ICW4_SFNM	0x10		/* Special fully nested (not) */
 
+/** pic_acknowledge:
+     *  Acknowledges an interrupt from either PIC 1 or PIC 2.
+     *
+     *  @param num The number of the interrupt
+     */
+void interrupts_pic_acknowledge(unsigned int interrupt)
+{
+	if (interrupt < INTERRUPTS_PIC1_OFFSET || interrupt > INTERRUPTS_PIC2_END) {
+		return;
+	}
+
+	if (interrupt < INTERRUPTS_PIC2_OFFSET) {
+		outb(INTERRUPTS_PIC1_COMMAND_PORT, INTERRUPTS_PIC_ACKNOWLEDGE);
+	} else {
+		outb(INTERRUPTS_PIC2_COMMAND_PORT, INTERRUPTS_PIC_ACKNOWLEDGE);
+	}
+}
+
 /*
 arguments:
 	offset1 - vector offset for master PIC
@@ -106,12 +129,17 @@ void interrupt_handler(__attribute__((unused)) struct cpu_state cpu, unsigned in
 		case INTERRUPTS_KEYBOARD:
 
 			scan_code = keyboard_read_scan_code();
-			ascii = scan_code_to_ascii[scan_code];
-			serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
-			serial_configure_line(SERIAL_COM1_BASE);
-			char str[] = "hello :D\n";
-			str[0] = ascii;
-			serial_write(str, 9);
+
+			if (scan_code <= KEYBOARD_MAX_ASCII) {
+				ascii = keyboard_scan_code_to_ascii[scan_code];
+				serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
+				serial_configure_line(SERIAL_COM1_BASE);
+				char str[1];
+				str[0] = ascii;
+				serial_write(str, 1);
+			}
+
+			interrupts_pic_acknowledge(interrupt);
 
 			break;
 		default:
