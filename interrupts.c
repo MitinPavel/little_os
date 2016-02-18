@@ -2,8 +2,12 @@
 #include "io.h"
 
 #include "serial.h"
+#include "keyboard.h"
 
 #define INTERRUPTS_DESCRIPTOR_COUNT 256 
+
+#define INTERRUPTS_PIC1_OFFSET 0x20
+#define INTERRUPTS_PIC2_OFFSET 0x28
 
 #define INTERRUPTS_KEYBOARD 33 
 
@@ -41,7 +45,7 @@ void interrupts_install_idt()
 	idt.size = sizeof(struct IDTDescriptor) * INTERRUPTS_DESCRIPTOR_COUNT;
 	interrupts_load_idt((int) &idt);
 
-	interrupts_remap_pic(0x20, 0x28);
+	interrupts_remap_pic(INTERRUPTS_PIC1_OFFSET, INTERRUPTS_PIC2_OFFSET);
 }
 
 /* PIC ***********************************************************************/
@@ -95,12 +99,18 @@ void interrupts_remap_pic(int offset1, int offset2)
 
 void interrupt_handler(__attribute__((unused)) struct cpu_state cpu, unsigned int interrupt, __attribute__((unused)) struct stack_state stack)
 {
+	unsigned char scan_code;
+	unsigned char ascii;
 
 	switch (interrupt){
 		case INTERRUPTS_KEYBOARD:
+
+			scan_code = keyboard_read_scan_code();
+			ascii = scan_code_to_ascii[scan_code];
 			serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
 			serial_configure_line(SERIAL_COM1_BASE);
 			char str[] = "hello :D\n";
+			str[0] = ascii;
 			serial_write(str, 9);
 
 			break;
