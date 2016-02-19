@@ -1,14 +1,6 @@
 #ifndef INCLUDE_INTERRUPTS
 #define INCLUDE_INTERRUPTS
 
-/*                      I/O port */
-#define PIC1		0x20		/* IO base address for master PIC */
-#define PIC2		0xA0		/* IO base address for slave PIC */
-#define PIC1_COMMAND	PIC1
-#define PIC1_DATA	(PIC1+1)
-#define PIC2_COMMAND	PIC2
-#define PIC2_DATA	(PIC2+1)
-
 struct IDT 
 {
 	unsigned short size;
@@ -27,8 +19,6 @@ struct IDTDescriptor {
 } __attribute__((packed));
 
 void interrupts_install_idt();
-
-void interrupts_remap_pic(int offset1, int offset2);
 
 // Wrappers around ASM.
 void interrupts_load_idt(unsigned int idt_address);
