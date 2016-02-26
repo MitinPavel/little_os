@@ -34,6 +34,8 @@ int serial_is_transmit_fifo_empty(unsigned int com);
 void serial_write_char(unsigned int com, char a);
 
 void serial_write(const char* data, int len);
+
+void serial_printf(char *fmt, int args);
  
 /* ------------------------------------------------------------------------- */
 

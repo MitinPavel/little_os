@@ -80,6 +80,61 @@ void test_serial_port()
 
 	char str[] = "test serial port\n";
 	serial_write(str, 17);
+
+ 	char fmt[] = "serial_printf Expected -30 Actual %d\n";
+	serial_printf(fmt, -30);
 }
 
+/*
+ * Only decimals expected at the moment.
+ * Example:
+ *	char fmt[] = "serial_printf Expected -30 Actual %d\n";
+ *      serial_printf(fmt, -30);
+ */
+void serial_printf(char* fmt, int args) {
+	serial_configure_baud_rate(SERIAL_COM1_BASE, 4);
+        serial_configure_line(SERIAL_COM1_BASE);
+
+	char decimals[] = "0123456789-";
+	int *current_arg = &args;
+
+	while(fmt[0]) {
+		if(fmt[0] == '%') { // Start to handle the next variadic argument.
+			fmt++;
+
+			switch(fmt[0]){
+				case 'd': // Decimal number.
+					if(current_arg[0] < 0){ // Handle negative numbers.
+						serial_write(&decimals[10], 1);
+						current_arg[0] *= -1;
+					}
+
+					// Calculate lenght of the string representation of the number.
+					int length = 0;
+					int tmp = current_arg[0];
+					while(tmp) {
+						length++;
+						tmp /= 10;
+					}
+
+					// Write out the string representation of the number
+					char number_as_str[length - 1];
+					int cur = length;
+					while(cur) {
+						cur--;
+						number_as_str[cur] = decimals[current_arg[0] % 10];
+						current_arg[0] /= 10;	
+					}
+
+					serial_write(number_as_str, length);
+					current_arg++;
+				break;
+			}
+		} else {
+			serial_write(fmt, 1);
+		}
+		
+		fmt++;
+	}	
+}
 
